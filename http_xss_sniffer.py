@@ -94,7 +94,6 @@ XSS_VULNERABILITIES = {
 }
 
 
-# Функция для декодирования URL и Base64
 def decode_payload(payload) -> str:
     """
     Декодирование HTML и URL
