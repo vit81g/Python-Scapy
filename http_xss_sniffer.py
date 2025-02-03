@@ -18,7 +18,7 @@ from env import INTERFACE, TARGET_PORT as PORT
 FILTER = f"tcp port {PORT}"
 
 XSS_VULNERABILITIES = {
-    "Stored XSS": {
+    "Stored XSS": {  # когда вредоносный код сохраняется на сервере
         r"<script.*?>.*?</script>": {
             "description": "Script Injection",
             "explanation": "Инъекция JavaScript-кода через тег <script>. Этот код сохраняется на сервере и может быть выполнен позже, когда другие пользователи посетят страницу.",
@@ -36,7 +36,7 @@ XSS_VULNERABILITIES = {
             ]
         }
     },
-    "Reflected XSS": {
+    "Reflected XSS": {  # когда вредоносный код исполняется через параметры в URL или формы
         r"javascript:\s*alert\(\s*['\"]?.*?['\"]?\)": {
             "description": "JavaScript Alert Injection",
             "explanation": "Инъекция через ссылку или параметр URL с использованием JavaScript-кода для выполнения alert.",
@@ -54,7 +54,7 @@ XSS_VULNERABILITIES = {
             ]
         }
     },
-    "DOM-based XSS": {
+    "DOM-based XSS": {  # когда скрипт исполняется на клиентской стороне, без взаимодействия с сервером, через манипуляции с DOM
         r"(eval\(\s*['\"].*?['\"]\)|document\.write\(\s*['\"].*?['\"]\)|innerHTML\s*=\s*['\"].*?['\"])": {
             "description": "DOM Manipulation Injection",
             "explanation": "Инъекция через манипуляцию DOM, используя методы JavaScript, такие как eval(), document.write() и innerHTML.",
@@ -127,17 +127,17 @@ def packet_parser_callback(packet: Packet) -> None:
                         detected_encoding = "utf-8"
                     payload = raw_data.decode(encoding=detected_encoding, errors="ignore")
 
-                    # Декодируем URL, URL и Base64
+                    # Декодируем HTML и URL
                     payload = decode_payload(payload)
 
-                    # Ищем потенциальные уязвимости XSS (<script> в параметрах запроса)
+                    # Ищем потенциальные уязвимости XSS в параметрах запроса
                     found_vulnerabilities = []
                     for category, patterns in XSS_VULNERABILITIES.items():
                         for pattern, vulnerability in patterns.items():
-                            matches = re.findall(pattern, payload, re.IGNORECASE)
+                            matches = re.findall(pattern, payload, re.IGNORECASE)  # ищем все возможные совпадения
                             if matches:
                                 found_vulnerabilities.append( f"   [-] [Vulnerability <{category}: {vulnerability["description"]}> DETECTED]:")
-                                for index, match in enumerate(matches):
+                                for match in matches:
                                     found_vulnerabilities.append(f"       {match}  # {vulnerability["explanation"]}")
                     if found_vulnerabilities:
                         print(f"[+] HTTP packet: {datetime.fromtimestamp(packet.time).strftime('%d-%m-%Y %H:%M:%S')}: src: {packet[IP].src}, dst: {packet[IP].dst}")
